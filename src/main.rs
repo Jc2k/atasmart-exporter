@@ -1,6 +1,3 @@
-// Will create an exporter with a single metric that will randomize the value
-// of the metric everytime the exporter is called.
-
 use env_logger::{Builder, Env};
 use libatasmart::Disk;
 use libatasmart_sys::SkSmartOverall;
