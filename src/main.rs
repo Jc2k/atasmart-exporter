@@ -35,9 +35,10 @@ fn main() {
 
         match &disk.get_temperature() {
             Ok(temp_value) => {
+                let temp_value = (*temp_value as f64) / 10000.0;
                 metric_temp
                     .with_label_values(&[disk_path])
-                    .set(*temp_value as f64);
+                    .set(temp_value);
             }
             _ => {
                 error!("Failed to extract temperature");
