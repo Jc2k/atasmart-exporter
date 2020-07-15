@@ -33,6 +33,8 @@ fn main() {
         // Will block until exporter receives http request.
         request_receiver.recv().unwrap();
 
+        disk.refresh_smart_data();
+
         match &disk.get_temperature() {
             Ok(temp_value) => {
                 let temp_value = (*temp_value as f64) / 10000.0;
