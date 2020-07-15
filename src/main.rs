@@ -1,6 +1,7 @@
 use env_logger::{Builder, Env};
 use libatasmart::Disk;
 use libatasmart_sys::SkSmartOverall;
+use log::error;
 use prometheus::register_gauge_vec;
 use prometheus_exporter::{FinishedUpdate, PrometheusExporter};
 use std::net::SocketAddr;
@@ -38,7 +39,9 @@ fn main() {
                     .with_label_values(&[disk_path])
                     .set(*temp_value as f64);
             }
-            _ => {}
+            _ => {
+                error!("Failed to extract temperature");
+            }
         }
 
         match &disk.get_smart_status() {
@@ -49,7 +52,9 @@ fn main() {
                     metric_status.with_label_values(&[disk_path]).set(0.0);
                 }
             }
-            _ => {}
+            _ => {
+                error!("Failed to extract smart status");
+            }
         }
 
         match &disk.smart_get_overall() {
@@ -70,7 +75,9 @@ fn main() {
                     .with_label_values(&[disk_path, label])
                     .set(1.0);
             }
-            _ => {}
+            _ => {
+                error!("Failed to extract smart overall");
+            }
         }
 
         // Notify exporter that all metrics have been updated so the caller client can
