@@ -12,7 +12,7 @@ fn main() {
     Builder::from_env(Env::default().default_filter_or("info")).init();
 
     // Parse address used to bind exporter to.
-    let addr_raw = "127.0.0.1:93939";
+    let addr_raw = "127.0.0.1:9393";
     let addr: SocketAddr = addr_raw.parse().expect("can not parse listen addr");
 
     // Start exporter.
