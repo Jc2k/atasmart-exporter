@@ -21,6 +21,10 @@ fn main() {
 
     let metric_temp = register_gauge_vec!("atasmart_temperature", "help", &["disk"])
         .expect("could not create temp gauge");
+    let metric_bad_sectors = register_gauge_vec!("atasmart_bad_sectors", "help", &["disk"])
+        .expect("could not create temp gauge");
+    let metric_power_cycles = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
+        .expect("could not create temp gauge");
     let metric_status = register_gauge_vec!("atasmart_status", "help", &["disk"])
         .expect("could not create temp gauge");
     let metric_overall = register_gauge_vec!("atasmart_overall", "help", &["disk", "status"])
@@ -33,17 +37,44 @@ fn main() {
         // Will block until exporter receives http request.
         request_receiver.recv().unwrap();
 
-        disk.refresh_smart_data();
+        match disk.refresh_smart_data() {
+            Ok(_) => {}
+            _ => {
+                error!("Call to refresh_smart_data failed");
+            }
+        }
 
         match &disk.get_temperature() {
             Ok(temp_value) => {
                 let temp_value = (*temp_value as f64) / 10000.0;
-                metric_temp
-                    .with_label_values(&[disk_path])
-                    .set(temp_value);
+                metric_temp.with_label_values(&[disk_path]).set(temp_value);
             }
             _ => {
                 error!("Failed to extract temperature");
+            }
+        }
+
+        match &disk.get_bad_sectors() {
+            Ok(bad_sectors) => {
+                let bad_sectors = *bad_sectors as f64;
+                metric_bad_sectors
+                    .with_label_values(&[disk_path])
+                    .set(bad_sectors);
+            }
+            _ => {
+                error!("Failed to extract bad sector count");
+            }
+        }
+
+        match &disk.get_power_cycle_count() {
+            Ok(power_cycle_count) => {
+                let power_cycle_count = *power_cycle_count as f64;
+                metric_power_cycles
+                    .with_label_values(&[disk_path])
+                    .set(power_cycle_count);
+            }
+            _ => {
+                error!("Failed to extract power cycle count");
             }
         }
 
