@@ -1,0 +1,13 @@
+[package]
+name = "atasmart-exporter"
+version = "0.1.0"
+authors = ["John Carr <john.carr@unrouted.co.uk>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+env_logger = "0.7.1"
+libatasmart = "0.3.0"
+prometheus_exporter = "0.5.0"
+prometheus = "0.9.0"
