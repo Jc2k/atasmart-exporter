@@ -4,7 +4,7 @@ WORKDIR /usr/src/atasmart-exporter
 
 # Build dependencies
 RUN USER=root cargo init --bin /usr/src/atasmart-exporter
-#COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
 RUN cargo build --release
 RUN rm src/*.rs
