@@ -63,6 +63,8 @@ fn main() {
         .expect("could not create temp gauge");
     let metric_power_cycles = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
         .expect("could not create temp gauge");
+    let metric_power_on = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
+        .expect("could not create temp gauge");
     let metric_status = register_gauge_vec!("atasmart_status", "help", &["disk"])
         .expect("could not create temp gauge");
     let metric_overall = register_gauge_vec!("atasmart_overall", "help", &["disk", "status"])
@@ -115,6 +117,18 @@ fn main() {
                 }
                 _ => {
                     error!("Failed to extract power cycle count");
+                }
+            }
+
+            match &disk.get_power_on() {
+                Ok(power_on) => {
+                    let power_on = *power_on as f64;
+                    metric_power_on
+                        .with_label_values(&[disk_path])
+                        .set(power_on);
+                }
+                _ => {
+                    error!("Failed to extract power_on");
                 }
             }
 
