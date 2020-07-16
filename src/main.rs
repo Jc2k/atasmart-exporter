@@ -57,6 +57,8 @@ fn main() {
     // Start exporter.
     let (request_receiver, finished_sender) = PrometheusExporter::run_and_notify(addr);
 
+    let metric_disk_size = register_gauge_vec!("atasmart_disk_size", "help", &["disk"])
+        .expect("could not create temp gauge");
     let metric_temp = register_gauge_vec!("atasmart_temperature", "help", &["disk"])
         .expect("could not create temp gauge");
     let metric_bad_sectors = register_gauge_vec!("atasmart_bad_sectors", "help", &["disk"])
@@ -83,6 +85,18 @@ fn main() {
                 Ok(_) => {}
                 _ => {
                     error!("Call to refresh_smart_data failed");
+                }
+            }
+
+            match &disk.get_disk_size() {
+                Ok(disk_size) => {
+                    let disk_size = *disk_size as f64;
+                    metric_disk_size
+                        .with_label_values(&[disk_path])
+                        .set(disk_size);
+                }
+                _ => {
+                    error!("Failed to extract disk size");
                 }
             }
 
