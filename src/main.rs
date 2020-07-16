@@ -34,7 +34,9 @@ fn get_drives() -> std::vec::Vec<Disk> {
 
             for entry in block_dir.read_dir().expect("read_dir call failed") {
                 if let Ok(entry) = entry {
-                    drives.push(Disk::new(&entry.path().clone()).unwrap());
+                    let path = Path::new("/dev");
+                    let path = path.join(entry.path().file_name().unwrap());
+                    drives.push(Disk::new(&path).unwrap());
                 }
             }
         }
