@@ -92,7 +92,7 @@ fn main() {
             match disk.refresh_smart_data() {
                 Ok(_) => {}
                 _ => {
-                    error!("Call to refresh_smart_data failed");
+                    error!("{}: Call to refresh_smart_data failed", disk_path);
                 }
             }
 
@@ -104,7 +104,7 @@ fn main() {
                         .set(disk_size);
                 }
                 _ => {
-                    error!("Failed to extract disk size");
+                    error!("{}: Failed to extract disk size", disk_path);
                 }
             }
 
@@ -119,7 +119,7 @@ fn main() {
                         .set(sleep_mode);
                 }
                 _ => {
-                    error!("Failed to extract sleep mode");
+                    error!("{}: Failed to extract sleep mode", disk_path);
                 }
             }
 
@@ -129,7 +129,7 @@ fn main() {
                     metric_temp.with_label_values(&[disk_path]).set(temp_value);
                 }
                 _ => {
-                    error!("Failed to extract temperature");
+                    error!("{}: Failed to extract temperature", disk_path);
                 }
             }
 
@@ -141,7 +141,7 @@ fn main() {
                         .set(bad_sectors);
                 }
                 _ => {
-                    error!("Failed to extract bad sector count");
+                    error!("{}: Failed to extract bad sector count", disk_path);
                 }
             }
 
@@ -153,7 +153,7 @@ fn main() {
                         .set(power_cycle_count);
                 }
                 _ => {
-                    error!("Failed to extract power cycle count");
+                    error!("{}: Failed to extract power cycle count", disk_path);
                 }
             }
 
@@ -165,7 +165,7 @@ fn main() {
                         .set(power_on);
                 }
                 _ => {
-                    error!("Failed to extract power_on");
+                    error!("{}: Failed to extract power_on", disk_path);
                 }
             }
 
@@ -178,7 +178,7 @@ fn main() {
                     }
                 }
                 _ => {
-                    error!("Failed to extract smart status");
+                    error!("{}: Failed to extract smart status", disk_path);
                 }
             }
 
@@ -201,7 +201,7 @@ fn main() {
                         .set(1.0);
                 }
                 _ => {
-                    error!("Failed to extract smart overall");
+                    error!("{}: Failed to extract smart overall", disk_path);
                 }
             }
 
@@ -216,7 +216,7 @@ fn main() {
                         .set(identify_is_available);
                 }
                 _ => {
-                    error!("Failed to extract identify_is_available");
+                    error!("{}: Failed to extract identify_is_available", disk_path);
                 }
             }
 
@@ -231,7 +231,7 @@ fn main() {
                         .set(smart_is_available);
                 }
                 _ => {
-                    error!("Failed to extract smart_is_available");
+                    error!("{}: Failed to extract smart_is_available", disk_path);
                 }
             }
         }
