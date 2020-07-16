@@ -73,6 +73,9 @@ fn main() {
         .expect("could not create temp gauge");
     let metric_overall = register_gauge_vec!("atasmart_overall", "help", &["disk", "status"])
         .expect("could not create temp gauge");
+    let metric_identify_is_available =
+        register_gauge_vec!("atasmart_identify_is_available", "help", &["disk"])
+            .expect("could not create temp gauge");
 
     let mut disks = get_drives();
 
@@ -196,6 +199,21 @@ fn main() {
                 }
                 _ => {
                     error!("Failed to extract smart overall");
+                }
+            }
+
+            match &disk.identify_is_available() {
+                Ok(identify_is_available) => {
+                    let identify_is_available = match identify_is_available {
+                        true => 1.0,
+                        false => 0.0,
+                    };
+                    metric_identify_is_available
+                        .with_label_values(&[disk_path])
+                        .set(identify_is_available);
+                }
+                _ => {
+                    error!("Failed to extract identify_is_available");
                 }
             }
         }
