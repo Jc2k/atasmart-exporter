@@ -67,7 +67,7 @@ fn main() {
         .expect("could not create temp gauge");
     let metric_power_cycles = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
         .expect("could not create temp gauge");
-    let metric_power_on = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
+    let metric_power_on = register_gauge_vec!("atasmart_power_on", "help", &["disk"])
         .expect("could not create temp gauge");
     let metric_status = register_gauge_vec!("atasmart_status", "help", &["disk"])
         .expect("could not create temp gauge");
