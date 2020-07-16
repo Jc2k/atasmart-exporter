@@ -59,6 +59,8 @@ fn main() {
 
     let metric_disk_size = register_gauge_vec!("atasmart_disk_size", "help", &["disk"])
         .expect("could not create temp gauge");
+    let metric_sleep_mode = register_gauge_vec!("atasmart_sleep_mode", "help", &["disk"])
+        .expect("could not create temp gauge");
     let metric_temp = register_gauge_vec!("atasmart_temperature", "help", &["disk"])
         .expect("could not create temp gauge");
     let metric_bad_sectors = register_gauge_vec!("atasmart_bad_sectors", "help", &["disk"])
@@ -97,6 +99,21 @@ fn main() {
                 }
                 _ => {
                     error!("Failed to extract disk size");
+                }
+            }
+
+            match &disk.check_sleep_mode() {
+                Ok(sleep_mode) => {
+                    let sleep_mode = match sleep_mode {
+                        true => 1.0,
+                        false => 0.0,
+                    };
+                    metric_sleep_mode
+                        .with_label_values(&[disk_path])
+                        .set(sleep_mode);
+                }
+                _ => {
+                    error!("Failed to extract sleep mode");
                 }
             }
 
