@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use env_logger::{Builder, Env};
 use libatasmart::Disk;
 use libatasmart_sys::SkSmartOverall;
@@ -7,11 +8,14 @@ use prometheus_exporter::{FinishedUpdate, PrometheusExporter};
 use std::net::SocketAddr;
 use std::path::Path;
 
-fn get_drives() -> std::vec::Vec<Disk> {
+fn get_drives() -> Result<std::vec::Vec<Disk>> {
     let path = Path::new("/sys/bus/scsi/devices");
     let mut drives = Vec::new();
 
-    for entry in path.read_dir().expect("read_dir call failed") {
+    for entry in path
+        .read_dir()
+        .context("List devices in /sys/bus/scsi/devices")?
+    {
         if let Ok(entry) = entry {
             let block_dir = entry.path().join("block");
             if !block_dir.exists() {
@@ -23,8 +27,8 @@ fn get_drives() -> std::vec::Vec<Disk> {
                 continue;
             }
 
-            let type_string = std::fs::read_to_string(type_file).unwrap();
-            let type_num: i32 = type_string.trim().parse().unwrap();
+            let type_string = std::fs::read_to_string(type_file)?;
+            let type_num: i32 = type_string.trim().parse()?;
 
             // 0 => Direct Access, 5 => CD-ROM
             // https://elixir.bootlin.com/linux/v4.0/source/drivers/scsi/scsi.c
@@ -32,69 +36,59 @@ fn get_drives() -> std::vec::Vec<Disk> {
                 continue;
             }
 
-            for entry in block_dir.read_dir().expect("read_dir call failed") {
+            for entry in block_dir.read_dir()? {
                 if let Ok(entry) = entry {
-                    let path = Path::new("/dev");
-                    let path = path.join(entry.path().file_name().unwrap());
+                    if let Some(filename) = entry.path().file_name() {
+                        let path = Path::new("/dev");
+                        let path = path.join(filename);
 
-                    let drive = match Disk::new(&path) {
-                        Ok(disk) => disk,
-                        Err(e) => {
-                            info!(
-                                "{path:?}: Error creating Disk, drive probably not supported: {e}"
-                            );
-                            continue;
-                        }
-                    };
+                        let drive = match Disk::new(&path) {
+                            Ok(disk) => disk,
+                            Err(e) => {
+                                info!("{path:?}: Error creating Disk, drive probably not supported: {e}");
+                                continue;
+                            }
+                        };
 
-                    drives.push(drive);
+                        drives.push(drive);
+                    }
                 }
             }
         }
     }
 
-    drives
+    Ok(drives)
 }
 
-fn main() {
+fn main() -> Result<()> {
     // Setup logger with default level info so we can see the messages from
     // prometheus_exporter.
     Builder::from_env(Env::default().default_filter_or("info")).init();
 
     // Parse address used to bind exporter to.
     let addr_raw = "127.0.0.1:9393";
-    let addr: SocketAddr = addr_raw.parse().expect("can not parse listen addr");
+    let addr: SocketAddr = addr_raw.parse()?;
 
     // Start exporter.
     let (request_receiver, finished_sender) = PrometheusExporter::run_and_notify(addr);
 
-    let metric_disk_size = register_gauge_vec!("atasmart_disk_size", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_sleep_mode = register_gauge_vec!("atasmart_sleep_mode", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_temp = register_gauge_vec!("atasmart_temperature", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_bad_sectors = register_gauge_vec!("atasmart_bad_sectors", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_power_cycles = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_power_on = register_gauge_vec!("atasmart_power_on", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_status = register_gauge_vec!("atasmart_status", "help", &["disk"])
-        .expect("could not create temp gauge");
-    let metric_overall = register_gauge_vec!("atasmart_overall", "help", &["disk", "status"])
-        .expect("could not create temp gauge");
+    let metric_disk_size = register_gauge_vec!("atasmart_disk_size", "help", &["disk"])?;
+    let metric_sleep_mode = register_gauge_vec!("atasmart_sleep_mode", "help", &["disk"])?;
+    let metric_temp = register_gauge_vec!("atasmart_temperature", "help", &["disk"])?;
+    let metric_bad_sectors = register_gauge_vec!("atasmart_bad_sectors", "help", &["disk"])?;
+    let metric_power_cycles = register_gauge_vec!("atasmart_power_cycles", "help", &["disk"])?;
+    let metric_power_on = register_gauge_vec!("atasmart_power_on", "help", &["disk"])?;
+    let metric_status = register_gauge_vec!("atasmart_status", "help", &["disk"])?;
+    let metric_overall = register_gauge_vec!("atasmart_overall", "help", &["disk", "status"])?;
     let metric_identify_is_available =
-        register_gauge_vec!("atasmart_identify_available", "help", &["disk"])
-            .expect("could not create temp gauge");
+        register_gauge_vec!("atasmart_identify_available", "help", &["disk"])?;
     let metric_smart_is_available =
-        register_gauge_vec!("atasmart_smart_available", "help", &["disk"])
-            .expect("could not create temp gauge");
+        register_gauge_vec!("atasmart_smart_available", "help", &["disk"])?;
 
-    let mut disks = get_drives();
+    let mut disks = get_drives()?;
 
     loop {
-        request_receiver.recv().unwrap();
+        request_receiver.recv()?;
 
         for disk in disks.iter_mut() {
             let disk_path = disk.disk.clone();
@@ -249,6 +243,6 @@ fn main() {
 
         // Notify exporter that all metrics have been updated so the caller client can
         // receive a response.
-        finished_sender.send(FinishedUpdate).unwrap();
+        finished_sender.send(FinishedUpdate)?;
     }
 }

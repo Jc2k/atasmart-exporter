@@ -1,4 +1,4 @@
-FROM rust:1-buster AS builder
+FROM rust:1-bullseye AS builder
 
 WORKDIR /usr/src/atasmart-exporter
 
@@ -16,7 +16,7 @@ COPY . .
 RUN rm ./target/release/deps/atasmart_exporter*
 RUN cargo install --path .
 
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 RUN apt-get update && apt-get install -y libatasmart4 && apt-get clean
 
 COPY --from=builder /usr/src/atasmart-exporter/target/release/atasmart-exporter /app/bin/atasmart-exporter
