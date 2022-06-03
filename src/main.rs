@@ -40,9 +40,11 @@ fn get_drives() -> std::vec::Vec<Disk> {
                     let drive = match Disk::new(&path) {
                         Ok(disk) => disk,
                         Err(e) => {
-                            info!("{path:?}: Error creating Disk, drive probably not supported: {e}");
-                            continue
-                        },
+                            info!(
+                                "{path:?}: Error creating Disk, drive probably not supported: {e}"
+                            );
+                            continue;
+                        }
                     };
 
                     drives.push(drive);
