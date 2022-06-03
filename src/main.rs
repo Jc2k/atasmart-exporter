@@ -53,7 +53,7 @@ fn get_drives() -> std::vec::Vec<Disk> {
         }
     }
 
-    return drives;
+    drives
 }
 
 fn main() {
