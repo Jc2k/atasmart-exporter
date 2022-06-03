@@ -1,7 +1,7 @@
 use env_logger::{Builder, Env};
 use libatasmart::Disk;
 use libatasmart_sys::SkSmartOverall;
-use log::error;
+use log::{error, info};
 use prometheus::register_gauge_vec;
 use prometheus_exporter::{FinishedUpdate, PrometheusExporter};
 use std::net::SocketAddr;
@@ -36,7 +36,16 @@ fn get_drives() -> std::vec::Vec<Disk> {
                 if let Ok(entry) = entry {
                     let path = Path::new("/dev");
                     let path = path.join(entry.path().file_name().unwrap());
-                    drives.push(Disk::new(&path).unwrap());
+
+                    let drive = match Disk::new(&path) {
+                        Ok(disk) => disk,
+                        Err(e) => {
+                            info!("{path:?}: Error creating Disk, drive probably not supported: {e}");
+                            continue
+                        },
+                    };
+
+                    drives.push(drive);
                 }
             }
         }
